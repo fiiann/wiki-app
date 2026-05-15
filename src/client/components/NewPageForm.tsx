@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { slugify } from '../../lib/slugify'
 import type { WikiFile, WikiDomain, WikiType } from '../../../types'
 
 interface Props {
@@ -17,7 +18,7 @@ export default function NewPageForm({ onCreate, onCancel }: Props) {
     e.preventDefault()
     if (!title.trim()) return
     setSaving(true)
-    const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+    const slug = slugify(title)
     const path = `${folder}/${slug}.md`
     await onCreate({
       path,

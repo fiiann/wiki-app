@@ -1,32 +1,11 @@
 import type { WikiFileMeta } from '../../../types'
+import { buildTree, isFile, type FolderNode } from '../lib/tree'
 
 interface Props {
   files: WikiFileMeta[]
   selected: string | undefined
   onSelect: (path: string) => void
   onDelete: (path: string) => void
-}
-
-interface FolderNode {
-  [key: string]: FolderNode | WikiFileMeta
-}
-
-function buildTree(files: WikiFileMeta[]): FolderNode {
-  const root: FolderNode = {}
-  for (const file of files) {
-    const parts = file.path.split('/')
-    let node = root
-    for (let i = 0; i < parts.length - 1; i++) {
-      if (!node[parts[i]]) node[parts[i]] = {}
-      node = node[parts[i]] as FolderNode
-    }
-    node[parts[parts.length - 1]] = file
-  }
-  return root
-}
-
-function isFile(value: FolderNode | WikiFileMeta): value is WikiFileMeta {
-  return 'path' in value
 }
 
 function TreeNode({
