@@ -1,13 +1,18 @@
 import { Hono } from 'hono'
 import { serveStatic } from 'hono/bun'
+import wiki from './routes/wiki'
 
 const app = new Hono()
+
+app.route('/api/wiki', wiki)
 
 app.get('/api/health', (c) => c.json({ ok: true }))
 
 if (process.env.NODE_ENV === 'production') {
-  app.use('/*', serveStatic({ root: './dist' }))
-  app.get('/*', serveStatic({ path: './dist/index.html' }))
+  app.use('/assets/*', serveStatic({ root: './dist' }))
+  app.get('/*', (c) => {
+    return serveStatic({ path: './dist/index.html' })(c, async () => {})
+  })
 }
 
 export default {
