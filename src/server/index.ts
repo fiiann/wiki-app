@@ -1,10 +1,12 @@
 import { Hono } from 'hono'
 import { serveStatic } from 'hono/bun'
 import wiki from './routes/wiki'
+import tasks from './routes/tasks'
 
 const app = new Hono()
 
 app.route('/api/wiki', wiki)
+app.route('/api/tasks', tasks)
 
 app.get('/api/health', (c) => c.json({ ok: true }))
 
