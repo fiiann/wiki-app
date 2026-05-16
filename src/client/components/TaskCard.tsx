@@ -2,7 +2,8 @@ import type { Task, TaskStatus } from '../../../types'
 
 interface Props {
   task: Task
-  onOpen: (task: Task) => void
+  onPreview: (task: Task) => void
+  onEdit: (task: Task) => void
   onStatusChange: (id: string, status: TaskStatus) => void
 }
 
@@ -20,9 +21,9 @@ const PRIORITY_COLOR: Record<string, string> = {
   urgent: '#c44a4a'
 }
 
-export default function TaskCard({ task, onOpen, onStatusChange }: Props) {
+export default function TaskCard({ task, onPreview, onEdit, onStatusChange }: Props) {
   return (
-    <div className="task-card" onClick={() => onOpen(task)}>
+    <div className="task-card" onClick={() => onPreview(task)}>
       <div className="task-card-title">{task.title}</div>
       <div className="task-card-meta">
         <span
@@ -31,23 +32,25 @@ export default function TaskCard({ task, onOpen, onStatusChange }: Props) {
         >
           {task.priority}
         </span>
-        {task.due && (
-          <span className="task-due">{task.due}</span>
-        )}
-        {task.project && (
-          <span className="task-project">{task.project}</span>
-        )}
+        {task.due && <span className="task-due">{task.due}</span>}
+        {task.project && <span className="task-project">{task.project}</span>}
       </div>
-      <button
-        className="task-advance-btn"
-        title={`Move to ${NEXT_STATUS[task.status]}`}
-        onClick={(e) => {
-          e.stopPropagation()
-          onStatusChange(task.id, NEXT_STATUS[task.status])
-        }}
-      >
-        →
-      </button>
+      <div className="task-card-actions">
+        <button
+          className="task-edit-btn"
+          title="Edit task"
+          onClick={(e) => { e.stopPropagation(); onEdit(task) }}
+        >
+          ✎
+        </button>
+        <button
+          className="task-advance-btn"
+          title={`Move to ${NEXT_STATUS[task.status]}`}
+          onClick={(e) => { e.stopPropagation(); onStatusChange(task.id, NEXT_STATUS[task.status]) }}
+        >
+          →
+        </button>
+      </div>
     </div>
   )
 }

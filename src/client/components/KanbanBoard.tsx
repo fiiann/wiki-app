@@ -5,11 +5,12 @@ const STATUSES: TaskStatus[] = ['todo', 'in-progress', 'done', 'cancelled']
 
 interface Props {
   tasks: Task[]
-  onOpen: (task: Task) => void
+  onPreview: (task: Task) => void
+  onEdit: (task: Task) => void
   onStatusChange: (id: string, status: TaskStatus) => void
 }
 
-export default function KanbanBoard({ tasks, onOpen, onStatusChange }: Props) {
+export default function KanbanBoard({ tasks, onPreview, onEdit, onStatusChange }: Props) {
   const byStatus = Object.fromEntries(
     STATUSES.map((s) => [s, tasks.filter((t) => t.status === s)])
   ) as Record<TaskStatus, Task[]>
@@ -21,7 +22,8 @@ export default function KanbanBoard({ tasks, onOpen, onStatusChange }: Props) {
           key={status}
           status={status}
           tasks={byStatus[status]}
-          onOpen={onOpen}
+          onPreview={onPreview}
+          onEdit={onEdit}
           onStatusChange={onStatusChange}
         />
       ))}
