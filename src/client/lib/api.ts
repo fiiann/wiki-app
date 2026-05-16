@@ -1,4 +1,4 @@
-import type { WikiFile, WikiFileMeta, Task, Comment } from '../../../types'
+import type { WikiFile, WikiFileMeta, Task, Comment, Project } from '../../../types'
 
 async function req<T>(url: string, init?: RequestInit): Promise<T> {
   const res = await fetch(url, init)
@@ -65,4 +65,18 @@ export const commentsApi = {
     req<{ deleted: string }>(`/api/tasks/${taskId}/comments/${commentId}`, {
       method: 'DELETE'
     }),
+}
+
+export const projectsApi = {
+  list: () =>
+    req<Project[]>('/api/projects'),
+
+  create: (name: string) =>
+    req<Project>('/api/projects', { method: 'POST', ...json({ name }) }),
+
+  update: (id: string, name: string) =>
+    req<Project>(`/api/projects/${id}`, { method: 'PUT', ...json({ name }) }),
+
+  remove: (id: string) =>
+    req<{ deleted: string }>(`/api/projects/${id}`, { method: 'DELETE' }),
 }

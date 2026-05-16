@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
 import KanbanBoard from '../components/KanbanBoard'
 import TaskPreviewModal from '../components/TaskPreviewModal'
-import { tasksApi } from '../lib/api'
-import type { Task, TaskStatus } from '../../../types'
+import { tasksApi, projectsApi } from '../lib/api'
+import type { Task, TaskStatus, Project } from '../../../types'
 
 export default function TasksPage() {
   const [tasks, setTasks] = useState<Task[]>([])
+  const [projects, setProjects] = useState<Project[]>([])
   const [filterProject, setFilterProject] = useState('')
   const [filterPriority, setFilterPriority] = useState('')
   const [activeTask, setActiveTask] = useState<Task | null | undefined>(undefined)
@@ -15,9 +16,11 @@ export default function TasksPage() {
     setTasks(results)
   }
 
-  useEffect(() => { load().catch(console.error) }, [])
+  useEffect(() => {
+    load().catch(console.error)
+    projectsApi.list().then(setProjects).catch(console.error)
+  }, [])
 
-  const projects = [...new Set(tasks.map((t) => t.project).filter(Boolean))] as string[]
 
   const filtered = tasks.filter((t) => {
     if (filterProject && t.project !== filterProject) return false
@@ -64,7 +67,7 @@ export default function TasksPage() {
             onChange={(e) => setFilterProject(e.target.value)}
           >
             <option value="">All projects</option>
-            {projects.map((p) => <option key={p} value={p}>{p}</option>)}
+            {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
           </select>
           <select
             className="filter-select"
@@ -92,6 +95,7 @@ export default function TasksPage() {
       {activeTask !== undefined && (
         <TaskPreviewModal
           task={activeTask}
+          projects={projects}
           onSave={handleSave}
           onDelete={activeTask ? handleDelete : undefined}
           onClose={() => setActiveTask(undefined)}

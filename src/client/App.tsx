@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import WikiPage from './pages/WikiPage'
 import TasksPage from './pages/TasksPage'
+import ProjectsPage from './pages/ProjectsPage'
 
-type Mode = 'wiki' | 'tasks'
+type Mode = 'wiki' | 'tasks' | 'projects'
 
 export default function App() {
   const [mode, setMode] = useState<Mode>('wiki')
@@ -24,10 +25,16 @@ export default function App() {
           >
             Tasks
           </button>
+          <button
+            className={`nav-btn ${mode === 'projects' ? 'active' : ''}`}
+            onClick={() => setMode('projects')}
+          >
+            Projects
+          </button>
         </div>
       </nav>
       <main className="main-content">
-        {mode === 'wiki' ? <WikiPage /> : <TasksPage />}
+        {mode === 'wiki' ? <WikiPage /> : mode === 'tasks' ? <TasksPage /> : <ProjectsPage />}
       </main>
     </div>
   )

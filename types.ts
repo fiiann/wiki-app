@@ -33,4 +33,9 @@ export interface Comment {
   createdAt: string // ISO 8601
 }
 
+export interface Project {
+  id: string
+  name: string
+}
+
 export type WikiFileMeta = Omit<WikiFile, 'body'>
