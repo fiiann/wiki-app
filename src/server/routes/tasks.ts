@@ -82,6 +82,7 @@ export function createTasksRouter(tasksDir: string) {
   return tasks
 }
 
-await mkdir('/home/ubuntu/wiki/tasks', { recursive: true })
-const tasks = createTasksRouter('/home/ubuntu/wiki/tasks')
+const wikiRoot = process.env.WIKI_ROOT ?? '/home/ubuntu/wiki'
+await mkdir(join(wikiRoot, 'tasks'), { recursive: true })
+const tasks = createTasksRouter(join(wikiRoot, 'tasks'))
 export default tasks

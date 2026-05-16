@@ -1,0 +1,13 @@
+services:
+  wiki-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      NODE_ENV: production
+      WIKI_ROOT: /app/wiki
+    volumes:
+      - /home/ubuntu/wiki:/app/wiki
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
