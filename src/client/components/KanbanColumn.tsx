@@ -4,8 +4,7 @@ import type { Task, TaskStatus } from '../../../types'
 interface Props {
   status: TaskStatus
   tasks: Task[]
-  onPreview: (task: Task) => void
-  onEdit: (task: Task) => void
+  onOpen: (task: Task) => void
   onStatusChange: (id: string, status: TaskStatus) => void
 }
 
@@ -23,7 +22,7 @@ const COLUMN_COLOR: Record<TaskStatus, string> = {
   'cancelled': '#555'
 }
 
-export default function KanbanColumn({ status, tasks, onPreview, onEdit, onStatusChange }: Props) {
+export default function KanbanColumn({ status, tasks, onOpen, onStatusChange }: Props) {
   return (
     <div className="kanban-column">
       <div className="kanban-column-header">
@@ -43,8 +42,7 @@ export default function KanbanColumn({ status, tasks, onPreview, onEdit, onStatu
           <TaskCard
             key={task.id}
             task={task}
-            onPreview={onPreview}
-            onEdit={onEdit}
+            onOpen={onOpen}
             onStatusChange={onStatusChange}
           />
         ))}

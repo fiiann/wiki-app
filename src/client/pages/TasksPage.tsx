@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import KanbanBoard from '../components/KanbanBoard'
-import TaskModal from '../components/TaskModal'
 import TaskPreviewModal from '../components/TaskPreviewModal'
 import { tasksApi } from '../lib/api'
 import type { Task, TaskStatus } from '../../../types'
@@ -9,9 +8,7 @@ export default function TasksPage() {
   const [tasks, setTasks] = useState<Task[]>([])
   const [filterProject, setFilterProject] = useState('')
   const [filterPriority, setFilterPriority] = useState('')
-  const [previewTask, setPreviewTask] = useState<Task | undefined>(undefined)
-  const [modalTask, setModalTask] = useState<Task | null | undefined>(undefined)
-  // modalTask: undefined = closed, null = new task, Task = edit task
+  const [activeTask, setActiveTask] = useState<Task | null | undefined>(undefined)
 
   const load = async () => {
     const results = await tasksApi.list()
@@ -31,14 +28,12 @@ export default function TasksPage() {
   const handleStatusChange = async (id: string, status: TaskStatus) => {
     const updated = await tasksApi.update(id, { status })
     setTasks((prev) => prev.map((t) => (t.id === id ? updated : t)))
-    if (previewTask?.id === id) setPreviewTask(updated)
   }
 
   const handleSave = async (data: Partial<Task> & { title: string }) => {
-    if (modalTask) {
-      const updated = await tasksApi.update(modalTask.id, data)
+    if (activeTask) {
+      const updated = await tasksApi.update(activeTask.id, data)
       setTasks((prev) => prev.map((t) => (t.id === updated.id ? updated : t)))
-      if (previewTask?.id === updated.id) setPreviewTask(updated)
     } else {
       const created = await tasksApi.create({
         status: 'todo',
@@ -56,12 +51,6 @@ export default function TasksPage() {
   const handleDelete = async (id: string) => {
     await tasksApi.remove(id)
     setTasks((prev) => prev.filter((t) => t.id !== id))
-    if (previewTask?.id === id) setPreviewTask(undefined)
-  }
-
-  const handleEdit = (task: Task) => {
-    setPreviewTask(undefined)
-    setModalTask(task)
   }
 
   return (
@@ -89,32 +78,23 @@ export default function TasksPage() {
             <option value="low">Low</option>
           </select>
         </div>
-        <button className="btn-new-task" onClick={() => setModalTask(null)}>
+        <button className="btn-new-task" onClick={() => setActiveTask(null)}>
           + New Task
         </button>
       </div>
 
       <KanbanBoard
         tasks={filtered}
-        onPreview={(task) => setPreviewTask(task)}
-        onEdit={handleEdit}
+        onOpen={(task) => setActiveTask(task)}
         onStatusChange={handleStatusChange}
       />
 
-      {previewTask && (
+      {activeTask !== undefined && (
         <TaskPreviewModal
-          task={previewTask}
-          onEdit={() => handleEdit(previewTask)}
-          onClose={() => setPreviewTask(undefined)}
-        />
-      )}
-
-      {modalTask !== undefined && (
-        <TaskModal
-          task={modalTask}
+          task={activeTask}
           onSave={handleSave}
-          onDelete={modalTask ? handleDelete : undefined}
-          onClose={() => setModalTask(undefined)}
+          onDelete={activeTask ? handleDelete : undefined}
+          onClose={() => setActiveTask(undefined)}
         />
       )}
     </div>
