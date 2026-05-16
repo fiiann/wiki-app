@@ -1,7 +1,7 @@
 services:
   wiki-app:
     build:
-      context: /home/ubuntu/wiki-app
+      context: .
       dockerfile: Dockerfile
     environment:
       NODE_ENV: production
