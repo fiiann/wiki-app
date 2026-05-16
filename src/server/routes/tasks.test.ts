@@ -368,4 +368,82 @@ describe('Tasks Routes', () => {
       expect(res.status).toBe(404)
     })
   })
+
+  describe('Comment Routes', () => {
+    const taskId = '2026-05-15-test-task'
+
+    beforeEach(async () => {
+      const task = {
+        id: taskId,
+        title: 'Test Task',
+        status: 'todo' as const,
+        priority: 'medium' as const,
+        due: null,
+        project: null,
+        tags: [],
+        created: '2026-05-15',
+        body: ''
+      }
+      await writeFile(join(tmpDir, `${taskId}.md`), serializeTask(task), 'utf-8')
+    })
+
+    it('returns empty array when no comments exist', async () => {
+      const req = new Request(`http://localhost/${taskId}/comments`)
+      const res = await router.fetch(req)
+      expect(res.status).toBe(200)
+      expect(await res.json()).toEqual([])
+    })
+
+    it('returns 404 for comments on a non-existent task', async () => {
+      const req = new Request('http://localhost/no-such-task/comments')
+      const res = await router.fetch(req)
+      expect(res.status).toBe(404)
+    })
+
+    it('creates a comment and returns it with id and createdAt', async () => {
+      const req = new Request(`http://localhost/${taskId}/comments`, {
+        method: 'POST',
+        body: JSON.stringify({ content: 'Hello world' }),
+        headers: { 'Content-Type': 'application/json' }
+      })
+      const res = await router.fetch(req)
+      expect(res.status).toBe(201)
+      const data = await res.json()
+      expect(data.content).toBe('Hello world')
+      expect(typeof data.id).toBe('string')
+      expect(typeof data.createdAt).toBe('string')
+    })
+
+    it('lists comments after creation', async () => {
+      await router.fetch(new Request(`http://localhost/${taskId}/comments`, {
+        method: 'POST',
+        body: JSON.stringify({ content: 'First comment' }),
+        headers: { 'Content-Type': 'application/json' }
+      }))
+
+      const res = await router.fetch(new Request(`http://localhost/${taskId}/comments`))
+      const data = await res.json()
+      expect(data.length).toBe(1)
+      expect(data[0].content).toBe('First comment')
+    })
+
+    it('deletes a comment by id', async () => {
+      const createRes = await router.fetch(new Request(`http://localhost/${taskId}/comments`, {
+        method: 'POST',
+        body: JSON.stringify({ content: 'To delete' }),
+        headers: { 'Content-Type': 'application/json' }
+      }))
+      const created = await createRes.json()
+
+      const deleteRes = await router.fetch(
+        new Request(`http://localhost/${taskId}/comments/${created.id}`, { method: 'DELETE' })
+      )
+      expect(deleteRes.status).toBe(200)
+      const deleteData = await deleteRes.json()
+      expect(deleteData.deleted).toBe(created.id)
+
+      const listRes = await router.fetch(new Request(`http://localhost/${taskId}/comments`))
+      expect(await listRes.json()).toEqual([])
+    })
+  })
 })

@@ -3,7 +3,7 @@ import { readFile, writeFile, unlink, readdir, mkdir } from 'fs/promises'
 import { join } from 'path'
 import { parseTask, serializeTask } from '../lib/markdown'
 import { slugify } from '../../lib/slugify'
-import type { Task } from '../../../types'
+import type { Task, Comment } from '../../../types'
 
 export function createTasksRouter(tasksDir: string) {
   const tasks = new Hono()
@@ -73,6 +73,63 @@ export function createTasksRouter(tasksDir: string) {
     } catch {
       return c.json({ error: 'Not found' }, 404)
     }
+  })
+
+  const commentsDir = join(tasksDir, '.comments')
+
+  async function readComments(taskId: string): Promise<Comment[]> {
+    try {
+      const raw = await readFile(join(commentsDir, `${taskId}.json`), 'utf-8')
+      return JSON.parse(raw) as Comment[]
+    } catch {
+      return []
+    }
+  }
+
+  async function saveComments(taskId: string, comments: Comment[]): Promise<void> {
+    await mkdir(commentsDir, { recursive: true })
+    await writeFile(join(commentsDir, `${taskId}.json`), JSON.stringify(comments, null, 2), 'utf-8')
+  }
+
+  tasks.get('/:id/comments', async (c) => {
+    const id = c.req.param('id')
+    try {
+      await readFile(join(tasksDir, `${id}.md`), 'utf-8')
+    } catch {
+      return c.json({ error: 'Not found' }, 404)
+    }
+    return c.json(await readComments(id))
+  })
+
+  tasks.post('/:id/comments', async (c) => {
+    const id = c.req.param('id')
+    try {
+      await readFile(join(tasksDir, `${id}.md`), 'utf-8')
+    } catch {
+      return c.json({ error: 'Not found' }, 404)
+    }
+    const { content } = await c.req.json<{ content: string }>()
+    const comment: Comment = {
+      id: crypto.randomUUID(),
+      content: content.trim(),
+      createdAt: new Date().toISOString()
+    }
+    const existing = await readComments(id)
+    await saveComments(id, [...existing, comment])
+    return c.json(comment, 201)
+  })
+
+  tasks.delete('/:id/comments/:commentId', async (c) => {
+    const id = c.req.param('id')
+    const commentId = c.req.param('commentId')
+    try {
+      await readFile(join(tasksDir, `${id}.md`), 'utf-8')
+    } catch {
+      return c.json({ error: 'Not found' }, 404)
+    }
+    const existing = await readComments(id)
+    await saveComments(id, existing.filter((cm) => cm.id !== commentId))
+    return c.json({ deleted: commentId })
   })
 
   function todayStr(): string {
