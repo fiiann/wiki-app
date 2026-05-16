@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react'
 import Markdown from 'react-markdown'
-import type { Task, TaskStatus, TaskPriority, Comment } from '../../../types'
+import type { Task, TaskStatus, TaskPriority, Comment, Project } from '../../../types'
 import { commentsApi } from '../lib/api'
 
 interface Props {
   task: Task | null
+  projects: Project[]
   onSave: (data: Partial<Task> & { title: string }) => Promise<void>
   onDelete?: (id: string) => Promise<void>
   onClose: () => void
@@ -37,7 +38,7 @@ function taskToForm(task: Task): FormState {
   }
 }
 
-export default function TaskPreviewModal({ task, onSave, onDelete, onClose }: Props) {
+export default function TaskPreviewModal({ task, projects, onSave, onDelete, onClose }: Props) {
   const [form, setForm] = useState<FormState>(task ? taskToForm(task) : EMPTY)
   const [bodyTab, setBodyTab] = useState<'edit' | 'preview'>(
     task?.body.trim() ? 'preview' : 'edit'
@@ -146,13 +147,17 @@ export default function TaskPreviewModal({ task, onSave, onDelete, onClose }: Pr
             title="Due date"
           />
 
-          <input
+          <select
             className="task-dialog-input"
             value={form.project}
             onChange={(e) => set('project', e.target.value)}
-            placeholder="Project"
             title="Project"
-          />
+          >
+            <option value="">No project</option>
+            {projects.map((p) => (
+              <option key={p.id} value={p.id}>{p.name}</option>
+            ))}
+          </select>
 
           <input
             className="task-dialog-input task-dialog-tags"
