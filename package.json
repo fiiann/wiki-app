@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "concurrently \"bun run dev:server\" \"vite\"",
-    "dev:server": "bun --watch src/server/index.ts",
+    "dev:server": "PORT=3003 bun --watch src/server/index.ts",
     "build": "vite build",
     "start": "NODE_ENV=production bun src/server/index.ts",
     "test": "bun test"
