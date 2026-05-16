@@ -1,7 +1,7 @@
 services:
   wiki-app:
     build:
-      context: .
+      context: /home/ubuntu/wiki-app
       dockerfile: Dockerfile
     environment:
       NODE_ENV: production
@@ -10,4 +10,4 @@ services:
       - /home/ubuntu/wiki:/app/wiki
     restart: unless-stopped
     ports:
-      - "3001:3001"
+      - "3002:3001"
