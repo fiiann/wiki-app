@@ -27,4 +27,10 @@ export interface Task {
   body: string           // markdown notes below frontmatter
 }
 
+export interface Comment {
+  id: string        // crypto.randomUUID()
+  content: string
+  createdAt: string // ISO 8601
+}
+
 export type WikiFileMeta = Omit<WikiFile, 'body'>
