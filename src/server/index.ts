@@ -2,12 +2,14 @@ import { Hono } from 'hono'
 import { serveStatic } from 'hono/bun'
 import wiki from './routes/wiki'
 import tasks from './routes/tasks'
+import projects from './routes/projects'
 
 const app = new Hono()
 
 // API routes first — always take precedence
 app.route('/api/wiki', wiki)
 app.route('/api/tasks', tasks)
+app.route('/api/projects', projects)
 app.get('/api/health', (c) => c.json({ ok: true, mode: process.env.NODE_ENV ?? 'development' }))
 
 // Static assets (hashed filenames from Vite build)
@@ -25,6 +27,6 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 export default {
-  port: 3001,
+  port: Number(process.env.PORT) || 3001,
   fetch: app.fetch
 }
