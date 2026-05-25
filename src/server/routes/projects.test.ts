@@ -130,3 +130,122 @@ describe('DELETE /:id', () => {
     expect(projects[0].id).toBe('keep-me')
   })
 })
+
+describe('PUT /:id/shipfast', () => {
+  it('stores shipfast metadata on the project, returns updated project', async () => {
+    const router = createProjectsRouter(tmpDir)
+    await router.fetch(
+      new Request('http://localhost/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: 'My App' })
+      })
+    )
+    const meta = {
+      enabled: true,
+      startDate: '2026-05-25',
+      platform: ['iOS', 'Android'],
+      techStack: 'Flutter',
+      monetization: 'Freemium',
+      currentPhase: 1,
+      activatedPhases: []
+    }
+    const res = await router.fetch(
+      new Request('http://localhost/my-app/shipfast', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(meta)
+      })
+    )
+    expect(res.status).toBe(200)
+    const project = await res.json() as { id: string; name: string; shipfast: typeof meta }
+    expect(project.shipfast).toEqual(meta)
+  })
+
+  it('returns 404 when project does not exist', async () => {
+    const router = createProjectsRouter(tmpDir)
+    const res = await router.fetch(
+      new Request('http://localhost/nonexistent/shipfast', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          enabled: true,
+          startDate: '2026-05-25',
+          platform: ['Web'],
+          techStack: 'Next.js',
+          monetization: 'Freemium',
+          currentPhase: 1,
+          activatedPhases: []
+        })
+      })
+    )
+    expect(res.status).toBe(404)
+  })
+
+  it('persists shipfast so GET returns it afterward', async () => {
+    const router = createProjectsRouter(tmpDir)
+    await router.fetch(
+      new Request('http://localhost/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: 'My App' })
+      })
+    )
+    const meta = {
+      enabled: true,
+      startDate: '2026-05-25',
+      platform: ['iOS'],
+      techStack: 'React Native',
+      monetization: 'Subscription',
+      currentPhase: 2,
+      activatedPhases: [1]
+    }
+    await router.fetch(
+      new Request('http://localhost/my-app/shipfast', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(meta)
+      })
+    )
+    const res = await router.fetch(new Request('http://localhost/'))
+    const projects = await res.json() as Array<{ shipfast: typeof meta }>
+    expect(projects[0].shipfast).toEqual(meta)
+  })
+
+  it('PUT /:id (rename) preserves existing shipfast metadata', async () => {
+    const router = createProjectsRouter(tmpDir)
+    await router.fetch(
+      new Request('http://localhost/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: 'Old Name' })
+      })
+    )
+    const meta = {
+      enabled: true,
+      startDate: '2026-05-25',
+      platform: ['Android'],
+      techStack: 'Kotlin',
+      monetization: 'One-time',
+      currentPhase: 1,
+      activatedPhases: []
+    }
+    await router.fetch(
+      new Request('http://localhost/old-name/shipfast', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(meta)
+      })
+    )
+    const res = await router.fetch(
+      new Request('http://localhost/old-name', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: 'New Name' })
+      })
+    )
+    const project = await res.json() as { name: string; shipfast: typeof meta }
+    expect(project.name).toBe('New Name')
+    expect(project.shipfast).toEqual(meta)
+  })
+})

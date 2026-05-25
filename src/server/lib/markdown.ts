@@ -74,6 +74,9 @@ export function parseProject(content: string, id: string): Project {
 }
 
 export function serializeProject(project: Project): string {
-  const { id, ...frontmatter } = project
+  const { id, ...rest } = project
+  const frontmatter = Object.fromEntries(
+    Object.entries(rest).filter(([, v]) => v !== undefined)
+  )
   return matter.stringify('', frontmatter)
 }
