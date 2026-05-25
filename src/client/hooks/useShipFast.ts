@@ -1,7 +1,11 @@
-import { useMemo } from 'react'
+import { useMemo, useRef } from 'react'
 import { tasksApi, projectsApi } from '../lib/api'
 import { SHIPFAST_PHASES } from '../data/shipfast'
+import { projectAcronym } from '../../lib/acronym'
 import type { Project, Task, ShipFastMeta } from '../../../types'
+
+// Sequence counter per project — persists across re-renders within session
+const seqMap = new Map<string, number>()
 
 export function useShipFast(project: Project, tasks: Task[]) {
   const isShipFastProject = project.shipfast?.enabled === true
@@ -48,10 +52,21 @@ export function useShipFast(project: Project, tasks: Task[]) {
     const phase = SHIPFAST_PHASES.find((p) => p.id === phaseId)
     if (!phase) throw new Error(`Phase ${phaseId} not found`)
 
+    // Init sequence counter for this project
+    if (!seqMap.has(project.id)) {
+      seqMap.set(project.id, 1)
+    }
+
+    const acronym = projectAcronym(project.name)
     const created: Task[] = []
     for (const item of phase.checklist) {
+      const seq = seqMap.get(project.id)!
+      const idStr = `${acronym}-${String(seq).padStart(3, '0')}`
+      const title = `${idStr}: ${item.text}`
+      seqMap.set(project.id, seq + 1)
+
       const task = await tasksApi.create({
-        title: item.text,
+        title,
         project: project.id,
         tags: ['shipfast', `phase-${phaseId}`],
         status: 'todo',

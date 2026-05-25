@@ -81,7 +81,7 @@ input:focus, textarea:focus, select:focus { border-color: var(--accent); }
 /* Layout */
 .main-content {
   flex: 1;
-  overflow: hidden;
+  overflow: auto;
   display: flex;
 }
 
@@ -361,22 +361,40 @@ input:focus, textarea:focus, select:focus { border-color: var(--accent); }
   gap: 12px;
   flex: 1;
   overflow-x: auto;
-  padding: 16px;
+  overflow-y: hidden;
+  padding: 12px 8px;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  align-items: stretch;
+}
+
+.kanban-board::-webkit-scrollbar {
+  height: 6px;
+}
+
+.kanban-board::-webkit-scrollbar-track {
+  background: var(--bg-panel);
+}
+
+.kanban-board::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
 }
 
 .kanban-column {
-  flex: 1;
-  min-width: 200px;
+  flex: 0 0 160px;
+  width: 160px;
   background: var(--bg-panel);
   border: 1px solid var(--border);
   border-radius: 8px;
   display: flex;
   flex-direction: column;
   max-height: 100%;
+  scroll-snap-align: start;
 }
 
 .kanban-column-header {
-  padding: 12px 14px 8px;
+  padding: 10px 12px 8px;
   border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
@@ -394,7 +412,7 @@ input:focus, textarea:focus, select:focus { border-color: var(--accent); }
   border-radius: 10px;
 }
 
-.kanban-column-body { flex: 1; overflow-y: auto; padding: 8px; display: flex; flex-direction: column; gap: 6px; }
+.kanban-column-body { flex: 1; overflow-y: auto; padding: 8px; display: flex; flex-direction: column; gap: 6px; min-height: 0; }
 
 .kanban-empty { font-size: 12px; color: var(--text-dim); text-align: center; padding: 16px; }
 
@@ -863,7 +881,7 @@ input:focus, textarea:focus, select:focus { border-color: var(--accent); }
   flex-shrink: 0;
 }
 
-.projects-page { display: flex; flex-direction: column; height: 100%; }
+.projects-page { display: flex; flex-direction: column; height: 100%; overflow: visible; }
 .projects-list { flex: 1; overflow-y: auto; padding: 1rem; display: flex; flex-direction: column; gap: 0.5rem; }
 .project-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; border: 1px solid var(--border); border-radius: 6px; }
 .project-name { flex: 1; font-weight: 500; }
