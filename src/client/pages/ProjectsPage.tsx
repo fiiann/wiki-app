@@ -29,7 +29,7 @@ function ShipFastPanel({
 }: ShipFastPanelProps) {
   const sf = project.shipfast!
   const [activating, setActivating] = useState<number | null>(null)
-  const currentPhase = SHIPFAST_PHASES.find((p) => p.id === sf.currentPhase)!
+  const currentPhase = SHIPFAST_PHASES.find((p) => p.id === sf.currentPhase) ?? SHIPFAST_PHASES[0]
 
   const handleActivate = async (phaseId: number) => {
     setActivating(phaseId)
@@ -130,7 +130,12 @@ export default function ProjectsPage() {
       setProjectTasks([])
       return
     }
-    tasksApi.list({ project: selectedProject.id }).then(setProjectTasks).catch(console.error)
+    let cancelled = false
+    const id = selectedProject.id
+    tasksApi.list({ project: id }).then((tasks) => {
+      if (!cancelled) setProjectTasks(tasks)
+    }).catch(console.error)
+    return () => { cancelled = true }
   }, [selectedProject?.id])
 
   const { phaseProgress, activatePhase, enableShipFast, isShipFastProject, dayCount } =
