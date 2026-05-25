@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'bun:test'
-import { parseWikiFile, serializeWikiFile, parseTask, serializeTask } from './markdown'
+import { parseWikiFile, serializeWikiFile, parseTask, serializeTask, parseProject, serializeProject } from './markdown'
 
 const WIKI_CONTENT = `---
 title: Attention Mechanism
@@ -109,5 +109,101 @@ describe('serializeTask', () => {
     expect(reparsed.title).toBe(parsed.title)
     expect(reparsed.status).toBe(parsed.status)
     expect(reparsed.body).toBe(parsed.body)
+  })
+})
+
+const MINIMAL_PROJECT_CONTENT = `---
+name: My App
+---
+`
+
+const PROJECT_WITH_SHIPFAST_CONTENT = `---
+name: My App
+shipfast:
+  enabled: true
+  startDate: '2026-05-25'
+  platform:
+    - iOS
+    - Android
+  techStack: Flutter
+  monetization: Freemium
+  currentPhase: 1
+  activatedPhases:
+    - 1
+---
+`
+
+describe('parseProject', () => {
+  it('parses id from argument and name from frontmatter', () => {
+    const result = parseProject(MINIMAL_PROJECT_CONTENT, 'my-app')
+    expect(result.id).toBe('my-app')
+    expect(result.name).toBe('My App')
+  })
+
+  it('returns undefined shipfast when not present', () => {
+    const result = parseProject(MINIMAL_PROJECT_CONTENT, 'my-app')
+    expect(result.shipfast).toBeUndefined()
+  })
+
+  it('parses shipfast metadata from nested frontmatter', () => {
+    const result = parseProject(PROJECT_WITH_SHIPFAST_CONTENT, 'my-app')
+    expect(result.shipfast).toEqual({
+      enabled: true,
+      startDate: '2026-05-25',
+      platform: ['iOS', 'Android'],
+      techStack: 'Flutter',
+      monetization: 'Freemium',
+      currentPhase: 1,
+      activatedPhases: [1]
+    })
+  })
+})
+
+describe('serializeProject', () => {
+  it('round-trips a minimal project', () => {
+    const project = { id: 'my-app', name: 'My App' }
+    const serialized = serializeProject(project)
+    const reparsed = parseProject(serialized, 'my-app')
+    expect(reparsed.id).toBe('my-app')
+    expect(reparsed.name).toBe('My App')
+    expect(reparsed.shipfast).toBeUndefined()
+  })
+
+  it('round-trips a project with shipfast metadata', () => {
+    const project = {
+      id: 'my-app',
+      name: 'My App',
+      shipfast: {
+        enabled: true,
+        startDate: '2026-05-25',
+        platform: ['iOS', 'Android'],
+        techStack: 'Flutter',
+        monetization: 'Freemium',
+        currentPhase: 1,
+        activatedPhases: [1]
+      }
+    }
+    const serialized = serializeProject(project)
+    const reparsed = parseProject(serialized, 'my-app')
+    expect(reparsed.shipfast).toEqual(project.shipfast)
+  })
+
+  it('round-trips activatedPhases as empty array', () => {
+    const project = {
+      id: 'my-app',
+      name: 'My App',
+      shipfast: {
+        enabled: true,
+        startDate: '2026-05-25',
+        platform: ['Web'],
+        techStack: 'Next.js',
+        monetization: 'Freemium',
+        currentPhase: 1,
+        activatedPhases: []
+      }
+    }
+    const serialized = serializeProject(project)
+    const reparsed = parseProject(serialized, 'my-app')
+    expect(reparsed.shipfast?.activatedPhases).toEqual([])
   })
 })
