@@ -71,6 +71,9 @@ export const projectsApi = {
   list: () =>
     req<Project[]>('/api/projects'),
 
+  get: (id: string) =>
+    req<Project>(`/api/projects/${id}`),
+
   create: (name: string) =>
     req<Project>('/api/projects', { method: 'POST', ...json({ name }) }),
 

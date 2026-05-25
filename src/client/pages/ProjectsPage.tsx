@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
 import { projectsApi, tasksApi } from '../lib/api'
 import KanbanBoard from '../components/KanbanBoard'
 import TaskPreviewModal from '../components/TaskPreviewModal'
@@ -104,7 +105,14 @@ function ShipFastPanel({
 
 // ── Main page component ───────────────────────────────────────────────────────
 
-export default function ProjectsPage() {
+interface ProjectsPageProps {
+  initialProjectId?: string
+}
+
+export default function ProjectsPage({ initialProjectId }: ProjectsPageProps = {}) {
+  const { id: urlProjectId } = useParams<{ id: string }>()
+  const navigate = useNavigate()
+
   const [projects, setProjects] = useState<Project[]>([])
   const [selectedProject, setSelectedProject] = useState<Project | null>(null)
   const [projectTasks, setProjectTasks] = useState<Task[]>([])
@@ -125,6 +133,22 @@ export default function ProjectsPage() {
     projectsApi.list().then(setProjects).catch(console.error)
   }, [])
 
+  // Sync URL project ID into selectedProject on mount
+  useEffect(() => {
+    const targetId = initialProjectId ?? urlProjectId
+    if (!targetId) return
+    // Find matching project from already-loaded list
+    const match = projects.find((p) => p.id === targetId)
+    if (match) {
+      setSelectedProject(match)
+    } else {
+      // Fetch if not yet loaded
+      projectsApi.get(targetId).then((p) => {
+        setSelectedProject(p)
+      }).catch(() => {})
+    }
+  }, [initialProjectId, urlProjectId, projects])
+
   useEffect(() => {
     if (!selectedProject) {
       setProjectTasks([])
@@ -144,11 +168,13 @@ export default function ProjectsPage() {
   const handleSelectProject = (p: Project) => {
     setSelectedProject(p)
     setShowEnableForm(false)
+    navigate(`/projects/${p.id}`)
   }
 
   const handleBack = () => {
     setSelectedProject(null)
     setShowEnableForm(false)
+    navigate('/projects')
   }
 
   const handleAdd = async (e: React.FormEvent) => {
