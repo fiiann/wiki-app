@@ -1,4 +1,4 @@
-import type { WikiFile, WikiFileMeta, Task, Comment, Project } from '../../../types'
+import type { WikiFile, WikiFileMeta, Task, Comment, Project, ShipFastMeta } from '../../../types'
 
 async function req<T>(url: string, init?: RequestInit): Promise<T> {
   const res = await fetch(url, init)
@@ -79,4 +79,10 @@ export const projectsApi = {
 
   remove: (id: string) =>
     req<{ deleted: string }>(`/api/projects/${id}`, { method: 'DELETE' }),
+
+  updateShipFast: (id: string, meta: ShipFastMeta) =>
+    req<Project>(`/api/projects/${id}/shipfast`, {
+      method: 'PUT',
+      ...json(meta)
+    }),
 }

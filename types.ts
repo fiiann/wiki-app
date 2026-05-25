@@ -33,9 +33,20 @@ export interface Comment {
   createdAt: string // ISO 8601
 }
 
+export interface ShipFastMeta {
+  enabled: boolean
+  startDate: string        // YYYY-MM-DD
+  platform: string[]       // e.g. ['iOS', 'Android']
+  techStack: string        // e.g. 'Flutter'
+  monetization: string     // e.g. 'Freemium'
+  currentPhase: number     // 1–5
+  activatedPhases: number[] // which phases have had tasks generated
+}
+
 export interface Project {
   id: string
   name: string
+  shipfast?: ShipFastMeta
 }
 
 export type WikiFileMeta = Omit<WikiFile, 'body'>

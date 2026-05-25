@@ -1,5 +1,5 @@
 import matter from 'gray-matter'
-import type { WikiFile, Task } from '../../../types'
+import type { WikiFile, Task, Project } from '../../../types'
 
 export function parseWikiFile(content: string, path: string): WikiFile {
   const { data, content: body } = matter(content)
@@ -49,4 +49,34 @@ export function parseTask(content: string, id: string): Task {
 export function serializeTask(task: Task): string {
   const { body, id, ...frontmatter } = task
   return matter.stringify('\n' + body, frontmatter)
+}
+
+export function parseProject(content: string, id: string): Project {
+  const { data } = matter(content)
+  const sf = data.shipfast
+  return {
+    id,
+    name: String(data.name ?? ''),
+    shipfast: sf
+      ? {
+          enabled: Boolean(sf.enabled),
+          startDate: String(sf.startDate ?? ''),
+          platform: Array.isArray(sf.platform) ? sf.platform.map(String) : [],
+          techStack: String(sf.techStack ?? ''),
+          monetization: String(sf.monetization ?? ''),
+          currentPhase: Number(sf.currentPhase ?? 1),
+          activatedPhases: Array.isArray(sf.activatedPhases)
+            ? sf.activatedPhases.map(Number)
+            : [],
+        }
+      : undefined,
+  }
+}
+
+export function serializeProject(project: Project): string {
+  const { id, ...rest } = project
+  const frontmatter = Object.fromEntries(
+    Object.entries(rest).filter(([, v]) => v !== undefined)
+  )
+  return matter.stringify('', frontmatter)
 }

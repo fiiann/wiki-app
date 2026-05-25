@@ -1,20 +1,42 @@
 import { Hono } from 'hono'
-import { readFile, writeFile } from 'fs/promises'
+import { readFile, writeFile, unlink, readdir, mkdir } from 'fs/promises'
 import { join } from 'path'
 import { slugify } from '../../lib/slugify'
-import type { Project } from '../../../types'
+import { parseProject, serializeProject } from '../lib/markdown'
+import type { Project, ShipFastMeta } from '../../../types'
 
 export function createProjectsRouter(wikiRoot: string) {
   const router = new Hono()
-  const filePath = join(wikiRoot, 'projects.json')
+  const projectsDir = join(wikiRoot, 'projects')
 
   async function readProjects(): Promise<Project[]> {
-    try { return JSON.parse(await readFile(filePath, 'utf-8')) }
-    catch { return [] }
+    let files: string[]
+    try {
+      files = await readdir(projectsDir)
+    } catch {
+      return []
+    }
+    const results: Project[] = []
+    for (const file of files) {
+      if (!file.endsWith('.md')) continue
+      const content = await readFile(join(projectsDir, file), 'utf-8')
+      results.push(parseProject(content, file.slice(0, -3)))
+    }
+    return results
   }
 
-  async function saveProjects(projects: Project[]) {
-    await writeFile(filePath, JSON.stringify(projects, null, 2), 'utf-8')
+  async function readProject(id: string): Promise<Project> {
+    const content = await readFile(join(projectsDir, `${id}.md`), 'utf-8')
+    return parseProject(content, id)
+  }
+
+  async function saveProject(project: Project): Promise<void> {
+    await mkdir(projectsDir, { recursive: true })
+    await writeFile(
+      join(projectsDir, `${project.id}.md`),
+      serializeProject(project),
+      'utf-8'
+    )
   }
 
   router.get('/', async (c) => c.json(await readProjects()))
@@ -26,28 +48,44 @@ export function createProjectsRouter(wikiRoot: string) {
     if (projects.find((p) => p.id === id))
       return c.json({ error: 'Project already exists' }, 409)
     const project: Project = { id, name }
-    await saveProjects([...projects, project])
+    await saveProject(project)
     return c.json(project, 201)
+  })
+
+  router.put('/:id/shipfast', async (c) => {
+    const id = c.req.param('id')
+    const meta = await c.req.json<ShipFastMeta>()
+    try {
+      const existing = await readProject(id)
+      const updated: Project = { ...existing, shipfast: meta }
+      await saveProject(updated)
+      return c.json(updated)
+    } catch {
+      return c.json({ error: 'Not found' }, 404)
+    }
   })
 
   router.put('/:id', async (c) => {
     const id = c.req.param('id')
     const { name } = await c.req.json<{ name: string }>()
-    const projects = await readProjects()
-    const idx = projects.findIndex((p) => p.id === id)
-    if (idx === -1) return c.json({ error: 'Not found' }, 404)
-    projects[idx] = { id, name }
-    await saveProjects(projects)
-    return c.json(projects[idx])
+    try {
+      const existing = await readProject(id)
+      const updated: Project = { ...existing, name }
+      await saveProject(updated)
+      return c.json(updated)
+    } catch {
+      return c.json({ error: 'Not found' }, 404)
+    }
   })
 
   router.delete('/:id', async (c) => {
     const id = c.req.param('id')
-    const projects = await readProjects()
-    const next = projects.filter((p) => p.id !== id)
-    if (next.length === projects.length) return c.json({ error: 'Not found' }, 404)
-    await saveProjects(next)
-    return c.json({ deleted: id })
+    try {
+      await unlink(join(projectsDir, `${id}.md`))
+      return c.json({ deleted: id })
+    } catch {
+      return c.json({ error: 'Not found' }, 404)
+    }
   })
 
   return router
