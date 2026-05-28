@@ -22,6 +22,20 @@ const COLUMN_COLOR: Record<TaskStatus, string> = {
   'cancelled': '#555'
 }
 
+const COLUMN_EMPTY_TEXT: Record<TaskStatus, string> = {
+  'todo': 'No tasks yet',
+  'in-progress': 'Nothing in progress',
+  'done': 'No completed tasks',
+  'cancelled': 'No cancelled tasks'
+}
+
+const COLUMN_EMPTY_ICON: Record<TaskStatus, string> = {
+  'todo': '📋',
+  'in-progress': '🔄',
+  'done': '✅',
+  'cancelled': '🚫'
+}
+
 export default function KanbanColumn({ status, tasks, onOpen, onStatusChange }: Props) {
   return (
     <div className="kanban-column">
@@ -36,7 +50,10 @@ export default function KanbanColumn({ status, tasks, onOpen, onStatusChange }: 
       </div>
       <div className="kanban-column-body">
         {tasks.length === 0 && (
-          <div className="kanban-empty">—</div>
+          <div className="kanban-empty">
+            <div className="kanban-empty-icon">{COLUMN_EMPTY_ICON[status]}</div>
+            <div className="kanban-empty-text">{COLUMN_EMPTY_TEXT[status]}</div>
+          </div>
         )}
         {tasks.map((task) => (
           <TaskCard

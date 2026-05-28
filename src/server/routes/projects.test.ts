@@ -131,6 +131,26 @@ describe('DELETE /:id', () => {
   })
 })
 
+describe('GET /:id', () => {
+  it('returns project by id when it exists', async () => {
+    const router = createProjectsRouter(tmpDir)
+    await router.fetch(
+      new Request('http://localhost/', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: 'Expense Tracker' }) })
+    )
+    const res = await router.fetch(new Request('http://localhost/expense-tracker'))
+    expect(res.status).toBe(200)
+    const project = await res.json() as { id: string; name: string }
+    expect(project.id).toBe('expense-tracker')
+    expect(project.name).toBe('Expense Tracker')
+  })
+
+  it('returns 404 for unknown id', async () => {
+    const router = createProjectsRouter(tmpDir)
+    const res = await router.fetch(new Request('http://localhost/nonexistent'))
+    expect(res.status).toBe(404)
+  })
+})
+
 describe('PUT /:id/shipfast', () => {
   it('stores shipfast metadata on the project, returns updated project', async () => {
     const router = createProjectsRouter(tmpDir)

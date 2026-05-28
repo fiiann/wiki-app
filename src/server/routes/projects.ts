@@ -41,6 +41,16 @@ export function createProjectsRouter(wikiRoot: string) {
 
   router.get('/', async (c) => c.json(await readProjects()))
 
+  router.get('/:id', async (c) => {
+    const id = c.req.param('id')
+    try {
+      const project = await readProject(id)
+      return c.json(project)
+    } catch {
+      return c.json({ error: 'Not found' }, 404)
+    }
+  })
+
   router.post('/', async (c) => {
     const { name } = await c.req.json<{ name: string }>()
     const id = slugify(name)
